@@ -101,6 +101,60 @@ class RealtimeEmotion(object):
 
 		return delta,theta,alpha,beta,gamma
 
+	def send_result_to_application(self,emotion_class):
+		"""
+		Send emotion predict to web app.
+		Input: Class of emotion between 1 to 5 according to Russel's Circumplex Model.
+		Output: Send emotion prediction to web app.
+		"""
+		socket =  SocketIO('localhost', socket_port, LoggingNamespace)
+		socket.emit('realtime emotion',emotion_class)
+
+	def main_process(self):
+		"""
+		Get realtime EEG data from Emotiv EPOC, process all data (FFT, feature extraction, and classification), and predict the emotion.
+		Input: -
+		Output: Class of emotion between 1 to 5 according to Russel's Circumplex Model.
+		"""
+		headset = Emotiv()
+		gevent.spawn(headset.setup)
+		gevent.sleep(0)
+
+		threads = []
+		eeg_realtime = np.zeros((number_of_channel,number_of_realtime_eeg),dtype=np.double)
+		counter=0
+		init=True
+
+		try:
+			#Looping to get realtime EEG data from Emotiv EPOC
+		    while True:
+		        packet = headset.dequeue()
+
+		        #Get initial EEG data for all channels
+		        if init:
+		        	for i in range(number_of_channel):eeg_realtime[i,counter]=packet.sensors[channel_names[i]]['value']
+		        else:
+		        	new_data=[packet.sensors[channel_names[i]]['value'] for i in range(number_of_channel)]
+		        	eeg_realtime=np.insert(eeg_realtime,number_of_realtime_eeg,new_data,axis=1)
+		        	eeg_realtime=np.delete(eeg_realtime,0,axis=1)
+		        
+		        #If EEG data have been recorded in ... seconds, then process data to predict emotion
+		        if counter == (sampling_rate-1) or counter == (number_of_realtime_eeg-1):
+		        	t = threading.Thread(target=rte.process_all_data, args=(eeg_realtime,))
+		        	threads.append(t)
+		        	t.start()
+
+		        	init=False
+		        	counter=0
+
+		        gevent.sleep(0)
+		        counter += 1
+
+		except KeyboardInterrupt:
+		    headset.close()
+		finally:
+		    headset.close()
+
 
 
 if _name_ == "_main_":
