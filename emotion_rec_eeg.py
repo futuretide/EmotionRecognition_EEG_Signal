@@ -100,6 +100,42 @@ class RealtimeEmotion(object):
 		gamma = map(lambda x: x[L*30/Fs-1: L*50/Fs],frequency)
 
 		return delta,theta,alpha,beta,gamma
+	
+	def determine_emotion_class(self,feature):
+		"""
+		Get emotion class from feature.
+		Input: Feature (standard deviasion and mean) from all frequency bands and channels with dimesion 1 x M (number of feature).
+		Output: Class of emotion between 1 to 5 according to Russel's Circumplex Model.
+		"""
+		class_ar,class_va = self.predict_emotion(feature)
+
+		if class_ar==2.0 or class_va==2.0:
+			emotion_class = 5
+		elif class_ar==3.0 and class_va==1.0:
+			emotion_class = 1
+		elif class_ar==3.0 and class_va==3.0:
+			emotion_class = 2
+		elif class_ar==1.0 and class_va==3.0:
+			emotion_class = 3
+		elif class_ar==1.0 and class_va==1.0:
+			emotion_class = 4
+
+		return emotion_class
+
+	def process_all_data(self,all_channel_data):
+		"""
+		Process all data from EEG data to predict emotion class.
+		Input: Channel data with dimension N x M. N denotes number of channel and M denotes number of EEG data from each channel.
+		Output: Class of emotion between 1 to 5 according to Russel's Circumplex Model. And send it to web ap
+		"""
+		#Get feature from EEG data
+		feature = self.get_feature(all_channel_data)
+
+		#Predict emotion class
+		emotion_class = self.determine_emotion_class(feature)
+
+		#send emotion_class to web app
+		self.send_result_to_application(emotion_class)
 
 
 
