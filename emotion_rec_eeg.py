@@ -38,10 +38,9 @@ class RealtimeEmotion(object):
 	"""
 
 	# path is set to training data directory
-	def _init_(self, path="../Training Data/"): 
-		"""
-		Initializes training data and their classes.
-		"""
+	def _init_(self, path="../Training Data/"):
+		aa = int(st)
+
 		self.train_arousal = self.get_csv(path + "train_arousal.csv")
 		self.train_valence = self.get_csv(path + "train_valence.csv")
 		self.class_arousal = self.get_csv(path + "class_arousal.csv")
@@ -81,16 +80,6 @@ class RealtimeEmotion(object):
 		"""
 		#Length data channel
 		L = len(all_channel_data[0])
-
-		#Sampling frequency
-		Fs = 128
-
-		#Get fft data
-		data_fft = self.do_fft(all_channel_data)
-
-		#Compute frequency
-		frequency = map(lambda x: abs(x/L),data_fft)
-		frequency = map(lambda x: x[: L/2+1]*2,frequency)
 
 		#List frequency
 		delta = map(lambda x: x[L*1/Fs-1: L*4/Fs],frequency)
