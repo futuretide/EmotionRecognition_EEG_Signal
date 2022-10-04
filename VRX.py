@@ -9,15 +9,10 @@
             if s_index_out_of_border is True:
                 if p_index_out_of_border is True:
                     return True
-                elif next_char_is_a_star is True:
-                    memory[(s_index, p_index)] = explore_state(s_index, p_index+2)
-                    return memory[(s_index, p_index)]
                 else:
                     memory[(s_index, p_index)] = False
                     return memory[(s_index, p_index)]
-                
-            if p_index_out_of_border:
-                return False
+               
             
             match = s[s_index] == p[p_index] or p[p_index] == "."
             
